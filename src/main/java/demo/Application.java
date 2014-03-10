@@ -3,12 +3,14 @@ package demo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -23,10 +25,15 @@ import org.springframework.web.bind.annotation.RestController;
 @ComponentScan
 @EnableAutoConfiguration
 @RestController
-public class Application {
+public class Application extends WebSecurityConfigurerAdapter {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
+	}
+	
+	@Bean
+	public AuthenticationManager authenticationManager() throws Exception {
+		return super.authenticationManagerBean();
 	}
 
 	@RequestMapping("/")
@@ -55,13 +62,10 @@ public class Application {
 	protected static class OAuth2Config extends AuthorizationServerConfigurerAdapter {
 
 		@Autowired
-		private ObjectPostProcessor<Object> objectPostProcessor;
+		private AuthenticationManager authenticationManager;
 
 		@Override
 		public void configure(OAuth2AuthorizationServerConfigurer oauthServer) throws Exception {
-			AuthenticationManager authenticationManager = new AuthenticationManagerBuilder(objectPostProcessor)
-					.inMemoryAuthentication().withUser("user").password("password").roles("USER").and().and()
-					.getOrBuild();
 			oauthServer.authenticationManager(authenticationManager);
 		}
 
